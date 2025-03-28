@@ -453,10 +453,10 @@ function core:initConfig()
     CreateFrame("frame"):SetScript("OnUpdate", function(self)
       if t<GetTime() then
         PlaySound("RaidWarning")
-        RaidNotice_AddMessage(RaidWarningFrame, "|cff33ccff"..ADDON_NAME..": Фреймы перетаскиваются ПКМ мыши с зажатым SHIFT.\nИзменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r", ChatTypeInfo["RAID_WARNING"])
+        RaidNotice_AddMessage(RaidWarningFrame, "|cff33ccff"..ADDON_NAME..": Фреймы перетаскиваются ЛКМ мыши с зажатым SHIFT.\nИзменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r", ChatTypeInfo["RAID_WARNING"])
         RaidNotice_AddMessage(RaidWarningFrame, GetAddOnMetadata(ADDON_NAME, "Notes"), ChatTypeInfo["RAID_WARNING"])
         print("|cff33ccff["..ADDON_NAME.."]:|r "..GetAddOnMetadata(ADDON_NAME, "Notes").."")
-        print("|cff33ccff["..ADDON_NAME.."]: Фреймы перетаскиваются ПКМ мыши с зажатым SHIFT. Изменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r")
+        print("|cff33ccff["..ADDON_NAME.."]: Фреймы перетаскиваются ЛКМ мыши с зажатым SHIFT. Изменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r")
         self:SetScript("OnUpdate", nil)
         self=nil
       end
