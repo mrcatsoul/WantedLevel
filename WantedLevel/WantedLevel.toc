@@ -1,0 +1,7 @@
+## Interface: 30300
+## Title: |cff33ccffWantedLevel|r by |cFFC41F3BMori|r
+## Version: 1.0.0 (28.3.25 23:00)
+## Notes: Codework by some random guy. GitHub/YouTube/Discord/Telegram: @mrcatsoul,|r |cFFC41F3BTombstalker|r/|cFFffffffМораль|r/|cFFC41F3BMoriarty|r~WoWCircle WotLK
+## SavedVariables: mrcatsoul_WantedLevel
+
+WantedLevel.lua
