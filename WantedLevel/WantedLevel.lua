@@ -176,17 +176,19 @@ local function StartSizing(self, delta, sizeOnlyFont)
   --self:SetSize(size*3, size)
   print(size)
   self.text:SetFont(select(1,self.text:GetFont()), size)
-  self:SetSize(self.text:GetStringWidth(),self.text:GetStringHeight())
+  self:SetSize(math.max(1,self.text:GetStringWidth()), math.max(1,self.text:GetStringHeight()))
 end
 
 do
   local f = CreateFrame("frame", ADDON_NAME.."_HatersCountFrame", UIParent) 
   f:SetMovable(true)
+  f:SetResizable(true)
+  f:SetUserPlaced(true) 
   f:EnableMouse(false)
   f:EnableMouseWheel(false)
   f:SetPoint("CENTER", 0, -120)
   f:SetFrameLevel(100)
-  f:SetSize(SIZE_DEF_COUNT*3, SIZE_DEF_COUNT)
+  f:SetSize(1, 1)
   f:SetFrameStrata("HIGH")
   f:SetClampedToScreen(true)
   f:SetAlpha(OPACITY_DEF)
@@ -248,7 +250,9 @@ do
   function f:UpdateFrames()
     local list = GetTargetedMe()
     local hatersCount = 0
-    local textNames = "Haters or fans:"
+    local textNames, textCount = "Haters or fans:", ""
+    
+    f:SetAlpha(OPACITY_DEF)
     
     for guid, data in pairs(list) do
       if (not cfg.settings.only_players_at_count or data.isPlayer) and (cfg.settings.neutral_at_count and data.reaction <= 4 or data.reaction <= 3) then
@@ -272,19 +276,12 @@ do
       end
     end
     
-    if textNames:find("\n") then
-      core.namesText:SetText(textNames)
-      core.namesText:GetParent():SetSize(core.namesText:GetStringWidth(),core.namesText:GetStringHeight())
-      --print(core.namesText:GetParent():GetName(),core.namesText:GetParent():GetSize())
-    else
-      core.namesText:SetText("|cff77ff77No haters or fans.")
-      core.namesText:GetParent():SetSize(core.namesText:GetStringWidth(),core.namesText:GetStringHeight())
-      --print(core.namesText:GetParent():GetName(),core.namesText:GetParent():GetSize())
-    end
-    
-    if hatersCount > 0 then  
-      local textCount = ""
-      
+    textNames = textNames:find("\n") and textNames or cfg.settings.show_empty_text_names and "|cff77ff77No haters or fans." or ""
+    local names = core.namesText
+    names:SetText(textNames)
+    names:GetParent():SetSize(math.max(1,names:GetStringWidth()),math.max(1,names:GetStringHeight()))
+
+    if hatersCount > 0 then
       if cfg.settings.wanted_level_stars then
         if cfg.settings.count_number then textCount = hatersCount.." " end
         for i=1,hatersCount do
@@ -299,7 +296,7 @@ do
       
       --f.text:SetFont(FONT_DEF, cfg[f:GetName()].size)
       f.text:SetText(textCount)
-      f:SetSize(f.text:GetStringWidth(),f.text:GetStringHeight())
+      f:SetSize(math.max(1,f.text:GetStringWidth()),math.max(1,f.text:GetStringHeight()))
       
       if hatersCount > 2 then
         f.text:SetTextColor(DEF_RED, DEF_GREEN, DEF_BLUE)
@@ -312,18 +309,21 @@ do
         testflash(f, 0.2, 0.7)
       end
     else
-      --f.text:SetFont(FONT_DEF, size/2)
-      f:SetAlpha(OPACITY_DEF)
-      f.text:SetTextColor(1, 1, 1)
-      f.text:SetText("no haters")
-      f:SetSize(f.text:GetStringWidth(),f.text:GetStringHeight())
+      if cfg.settings.show_empty_text_count then
+        f.text:SetTextColor(1, 1, 1)
+        f.text:SetText("no haters")
+      else
+        f.text:SetText("")
+      end
+      
+      f:SetSize(math.max(1,f.text:GetStringWidth()),math.max(1,f.text:GetStringHeight()))
     end
   end
   
   f:SetScript("onupdate", function(s,e)
     s.t = s.t and s.t + e or 0
     if s.t < 0.3 then return end
-    s.t = 0
+    s.t = 0                                                           
     s:UpdateFrames()
   end)
   
@@ -334,20 +334,23 @@ end
 
 do
   local f = CreateFrame("frame", ADDON_NAME.."_TargetedMeNamesFrame", UIParent)
+  f:SetPoint("CENTER", 0, 80)
   f:SetFrameStrata("MEDIUM")
-  f:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
   f:SetMovable(true)
+  f:SetResizable(true)
+  f:SetUserPlaced(true) 
   f:EnableMouse(false)
   f:EnableMouseWheel(false)
   f:SetFrameLevel(100)
-  f:SetSize(1, 1)
+  f:SetSize(SIZE_DEF_NAMES, SIZE_DEF_NAMES)
   f:SetClampedToScreen(true)
   
   local t = f:CreateFontString(ADDON_NAME.."_TargetedMeNamesFrameText", "OVERLAY")
   
   --t:SetPoint("center", UIParent, "center", 0, 100)
   --t:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 4, -65)
-  t:SetAllPoints()
+  --t:SetAllPoints()
+  t:SetPoint("center")
   t:SetFont(FONT_DEF_NAMES, SIZE_DEF_NAMES)
   t:SetShadowOffset(1, -1)
   t:SetJustifyH("LEFT")
@@ -410,6 +413,8 @@ local options =
   {"six_stars_max","Отображать максимум 6 звёзд",nil,true},
   {"neutral_at_count","Учитывать нейтральных (желтых мобов) в счётчике со звёздами",nil,false},
   {"neutral_at_names","Отображать нейтральных мобов в списке нацеленных на нас",nil,false},
+  {"show_empty_text_names","Отображать статус отсутствия нацелов когда их нет у списка имён",nil,false},
+  {"show_empty_text_count","Отображать статус отсутствия нацелов когда их нет у счётчика+звёзд",nil,false},
 }
 
 function core:UpdateVisual()
@@ -453,10 +458,8 @@ function core:initConfig()
     CreateFrame("frame"):SetScript("OnUpdate", function(self)
       if t<GetTime() then
         PlaySound("RaidWarning")
-        RaidNotice_AddMessage(RaidWarningFrame, "|cff33ccff"..ADDON_NAME..": Фреймы перетаскиваются ЛКМ мыши с зажатым SHIFT.\nИзменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r", ChatTypeInfo["RAID_WARNING"])
-        RaidNotice_AddMessage(RaidWarningFrame, GetAddOnMetadata(ADDON_NAME, "Notes"), ChatTypeInfo["RAID_WARNING"])
-        print("|cff33ccff["..ADDON_NAME.."]:|r "..GetAddOnMetadata(ADDON_NAME, "Notes").."")
-        print("|cff33ccff["..ADDON_NAME.."]: Фреймы перетаскиваются ЛКМ мыши с зажатым SHIFT. Изменить размер: зажатый SHIFT + прокрутка мышью на фрейме. Для адекватной работы ставим AwesomeWotlk патч: |cffddff33https://github.com/FrostAtom/awesome_wotlk|r")
+        RaidNotice_AddMessage(RaidWarningFrame, "|cff33ccff["..ADDON_NAME.."]:|r |cffffffff"..GetAddOnMetadata(ADDON_NAME, "Notes"), ChatTypeInfo["RAID_WARNING"])
+        print("|cff33ccff["..ADDON_NAME.."]:|r "..GetAddOnMetadata(ADDON_NAME, "Notes"))
         self:SetScript("OnUpdate", nil)
         self=nil
       end
